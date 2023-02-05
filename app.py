@@ -22,12 +22,16 @@ def getResponse(curIn):
 def home():
     return render_template('home.html')
 
+@app.route('/wastewizard')
+def wastewizard():
+    return render_template('wastewizard.html')
+
 @app.route("/result", methods=["POST"])
 def result():
     input_value = request.form["input_value"]
     response = getResponse(input_value)
     response_log.insert(0, (input_value, response))
-    return render_template("home.html", chat_response=response, responses = response_log)
+    return render_template("wastewizard.html", chat_response=response, responses = response_log)
 
 @app.route('/education')
 def education():
