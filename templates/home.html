@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}
+Home page
+{% endblock %}
+{% block content %}
+
+<style>
+    body {
+        color: white;
+
+    }
+
+</style>
+
+<h1>Garbage Guide</h1>
+
+<form action="/result" method="post">
+    <input type="text" name="input_value" size="50" maxlength="100">
+    <input type="submit" value="Submit">
+</form>
+
+<ul>
+    {% for input, response in responses %}
+        <p1>Waste Wizard: {{ response }} <br/></p1>
+        <p1>You: {{ input }} <br></p1>
+    {% endfor %}
+</ul>
+
+
+{% endblock %}
