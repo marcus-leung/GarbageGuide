@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, Response
 import os
 import openai
+from random import randint
 import cv2
 
 app = Flask(__name__)
@@ -9,20 +10,40 @@ openai.api_key = os.environ.get('OPENAI_KEY')
 response_log = []
 input_log = []
 
+with open('./coco.names','rt') as f:
+    class_name = f.read().rstrip('\n').split('\n')
+
+class_color = []
+for i in range(len(class_name)):
+    class_color.append((randint(0,255),randint(0,255),randint(0,255)))
+
+modelPath = 'ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt'
+weightPath = 'frozen_inference_graph.pb'
+
+net = cv2.dnn_DetectionModel(weightPath,modelPath)
+net.setInputSize(320,320)
+net.setInputScale(1.0/ 127.5)
+net.setInputMean((127.5, 127.5, 127.5))
+net.setInputSwapRB(True)
 cap = cv2.VideoCapture(0)
 
+currentDisplay = ""
 def get_frames():
     while True:
+        
         success, frame = cap.read()
 
-        if not success:
-            break
-        else:
-            ret,buffer=cv2.imencode('.jpg',frame)
-            frame=buffer.tobytes()
-
-            yield (b'--frame\r\n'
-                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+        classIds, confs, bbox = net.detect(frame,confThreshold=0.5)
+        if len(classIds)!=0:
+            for classId,confidence,box in zip(classIds.flatten(), confs.flatten(), bbox):
+                
+                #cv2.rectangle(frame,(int)box[0], (int)box[1],color=class_color[classId-1],thickness=2)
+                #cv2.putText(frame,class_name[classId-1].upper(),(box[0],box[1]-10),cv2.FONT_HERSHEY_COMPLEX_SMALL,1,class_color[classId-1],2)
+                
+                ret, buffer = cv2.imencode('.jpg', frame)
+                frame = buffer.tobytes()
+                yield (b'--frame\r\n'
+                  b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
 def getResponse(curIn):
     completion = openai.Completion.create(engine="text-davinci-003",
