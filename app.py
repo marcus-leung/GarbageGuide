@@ -1,12 +1,28 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, Response
 import os
 import openai
+import cv2
 
 app = Flask(__name__)
 openai.api_key = os.environ.get('OPENAI_KEY')
 
 response_log = []
 input_log = []
+
+cap = cv2.VideoCapture(0)
+
+def get_frames():
+    while True:
+        success, frame = cap.read()
+
+        if not success:
+            break
+        else:
+            ret,buffer=cv2.imencode('.jpg',frame)
+            frame=buffer.tobytes()
+
+            yield (b'--frame\r\n'
+                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
 def getResponse(curIn):
     completion = openai.Completion.create(engine="text-davinci-003",
@@ -21,6 +37,10 @@ def getResponse(curIn):
 @app.route('/')
 def home():
     return render_template('home.html')
+
+@app.route('/video')
+def video():
+    return Response(get_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/wastewizard')
 def wastewizard():

@@ -7,11 +7,19 @@ Home page
 <style>
     body {
         color: white;
+    }
 
+    .video {
+        text-align: center;
+        display: block;
     }
 
 </style>
 
 <h1>Garbage Guide</h1>
+
+<div>
+    <img class="video" src="{{ url_for('video') }}" width="60%" />
+</div>
 
 {% endblock %}
